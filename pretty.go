@@ -20,7 +20,7 @@ var replacer = strings.NewReplacer(
 
 const msg = "missing ',' before newline in composite literal"
 
-func Pretty(x interface{}) string {
+func Print(x interface{}) string {
 	dat := replacer.Replace(fmt.Sprintf("package foo;var x = %#v", x))
 	set := token.NewFileSet()
 	var (

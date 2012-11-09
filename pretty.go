@@ -18,7 +18,10 @@ var replacer = strings.NewReplacer(
 	"}", "\n}",
 )
 
-const msg = "missing ',' before newline in composite literal"
+const (
+	missingErr = "missing ',' before newline in composite literal"
+	stringErr  = "string not terminated"
+)
 
 func Print(x interface{}) string {
 	dat := replacer.Replace(fmt.Sprintf("package foo;var x = %#v", x))
@@ -38,16 +41,23 @@ func Print(x interface{}) string {
 			panic(err)
 		}
 		changes := false
-		bytes := []byte(dat)
+		byteDat := []byte(dat)
 		for i := len(serr) - 1; i >= 0; i-- {
 			s := serr[i]
-			if s.Msg != msg {
-				continue
+			switch s.Msg {
+			case missingErr:
+				byteDat = append(byteDat[:s.Pos.Offset], append([]byte{','}, byteDat[s.Pos.Offset:]...)...)
+				changes = true
+			case stringErr:
+				index := bytes.IndexByte(byteDat[s.Pos.Offset:], '\n')
+				if index == -1 {
+					break
+				}
+				byteDat = append(byteDat[:s.Pos.Offset+index], byteDat[s.Pos.Offset+index+1:]...)
+				changes = true
 			}
-			bytes = append(bytes[:s.Pos.Offset], append([]byte{','}, bytes[s.Pos.Offset:]...)...)
-			changes = true
 		}
-		dat = string(bytes)
+		dat = string(byteDat)
 		if !changes {
 			panic(err)
 		}
@@ -55,5 +65,5 @@ func Print(x interface{}) string {
 
 	var buf bytes.Buffer
 	printer.Fprint(&buf, set, f)
-	return buf.String()[21:]
+	return strings.TrimRight(buf.String()[21:], "\n")
 }

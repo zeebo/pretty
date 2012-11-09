@@ -1,4 +1,4 @@
-package main
+package pretty
 
 import (
 	"bytes"

@@ -29,3 +29,16 @@ func TestString(t *testing.T) {
 		}
 	}
 }
+
+func TestStringInStruct(t *testing.T) {
+	x := struct {
+		A string
+		B int
+	}{
+		"foo}",
+		2,
+	}
+	if got := Print(x); got != "struct {\n\tA\tstring\n\tB\tint\n}{\n\tA:\t\"foo}\",\n\tB:\t2,\n}" {
+		t.Fatal("didn't work")
+	}
+}

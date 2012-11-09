@@ -49,6 +49,11 @@ func Print(x interface{}) string {
 				byteDat = append(byteDat[:s.Pos.Offset], append([]byte{','}, byteDat[s.Pos.Offset:]...)...)
 				changes = true
 			case stringErr:
+				// these always come in pairs so do the one before it
+				if i > 0 && serr[i-1].Msg == stringErr {
+					i--
+					s = serr[i]
+				}
 				index := bytes.IndexByte(byteDat[s.Pos.Offset:], '\n')
 				if index == -1 {
 					break

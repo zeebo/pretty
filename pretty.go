@@ -42,26 +42,38 @@ func Print(x interface{}) string {
 		}
 		changes := false
 		byteDat := []byte(dat)
+
+		// fix strings that got split
+		for i := 0; i < len(serr); i++ {
+			s := serr[i]
+			if s.Msg != stringErr {
+				continue
+			}
+			index := bytes.IndexByte(byteDat[s.Pos.Offset:], '\n')
+			if index == -1 {
+				break
+			}
+			byteDat = append(byteDat[:s.Pos.Offset+index], byteDat[s.Pos.Offset+index+1:]...)
+			changes = true
+			break
+		}
+
+		if changes {
+			goto finished
+		}
+
+		// fix missing commans
 		for i := len(serr) - 1; i >= 0; i-- {
 			s := serr[i]
-			switch s.Msg {
-			case missingErr:
-				byteDat = append(byteDat[:s.Pos.Offset], append([]byte{','}, byteDat[s.Pos.Offset:]...)...)
-				changes = true
-			case stringErr:
-				// these always come in pairs so do the one before it
-				if i > 0 && serr[i-1].Msg == stringErr {
-					i--
-					s = serr[i]
-				}
-				index := bytes.IndexByte(byteDat[s.Pos.Offset:], '\n')
-				if index == -1 {
-					break
-				}
-				byteDat = append(byteDat[:s.Pos.Offset+index], byteDat[s.Pos.Offset+index+1:]...)
-				changes = true
+			if s.Msg != missingErr {
+				continue
 			}
+			byteDat = append(byteDat[:s.Pos.Offset], append([]byte{','}, byteDat[s.Pos.Offset:]...)...)
+			changes = true
 		}
+
+	finished:
+
 		dat = string(byteDat)
 		if !changes {
 			panic(err)

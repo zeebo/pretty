@@ -9,7 +9,6 @@ import (
 	"go/scanner"
 	"go/token"
 	"strings"
-	"time"
 )
 
 var replacer = strings.NewReplacer(
